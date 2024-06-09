@@ -1,0 +1,71 @@
+
+
+
+
+// 1. Знайти Items які входять в конкретний Order (за Order id)
+
+MATCH (o:Order {id: 'o2'})-[:CONTAINS]->(item:Item)
+RETURN item
+
+// 2. Підрахувати вартість конкретного Order
+
+MATCH (o:Order {id: 'o1'})-[:CONTAINS]->(item:Item)
+RETURN sum(item.price) AS total_cost
+
+
+// 3. Знайти всі Orders конкретного Customer
+
+MATCH (c:Customer {id: 'c2'})-[:BOUGHT]->(o:Order)
+RETURN o
+
+MATCH (c:Customer {id: 'c2'})-[:BOUGHT]->(o:Order)
+RETURN o.id AS order_id, o.date AS order_date
+
+// 4. Знайти всі Items куплені конкретним Customer (через його Orders)
+
+MATCH (c:Customer {id: 'c3'})-[:BOUGHT]->(:Order)-[:CONTAINS]->(i:Item)
+RETURN i
+
+
+// 5. Знайти загальну кількість Items куплені конкретним Customer (через його Order)
+
+MATCH (c:Customer {id: 'c2'})-[:BOUGHT]->(:Order)-[:CONTAINS]->(i:Item)
+RETURN COUNT(i) AS total_items
+
+
+// 6. Знайти для Customer на яку загальну суму він придбав товарів (через його Order)
+
+MATCH (c:Customer {id: 'c3'})-[:BOUGHT]->(:Order)-[:CONTAINS]->(i:Item)
+RETURN SUM(i.price) AS total_spent
+
+
+// 7. Знайти скільки разів кожен товар був придбаний, відсортувати за цим значенням
+
+MATCH (i:Item)<-[:CONTAINS]-(o:Order)
+RETURN i.name AS item_name, COUNT(o) AS purchase_count
+ORDER BY purchase_count DESC
+
+
+// 8. Знайти всі Items переглянуті (view) конкретним Customer
+
+MATCH (c:Customer {id: 'c3'})-[:VIEW]->(item:Item)
+RETURN item.name AS viewed_item
+
+
+// 9. Знайти інші Items що купувались разом з конкретним Item (тобто всі Items що входять до Order-s разом з даними Item)
+
+MATCH (item:Item {id: 'i1'})<-[:CONTAINS]-(o:Order {id:'o1'})-[:CONTAINS]->(related_item:Item)
+WHERE item <> related_item
+RETURN DISTINCT related_item
+
+
+// 10. Знайти Customers які купили даний конкретний Item
+
+MATCH (item:Item {id: 'i4'})<-[:CONTAINS]-(:Order)<-[:BOUGHT]-(customer:Customer)
+RETURN customer
+
+// 11. Знайти для певного Customer(а) товари, які він переглядав, але не купив
+MATCH (customer:Customer {id: 'c3'})-[:VIEW]->(item:Item)
+WHERE NOT (customer)-[:BOUGHT]->(:Order)-[:CONTAINS]->(item)
+RETURN DISTINCT item.name AS item
+
